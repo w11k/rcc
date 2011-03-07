@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Test
+Bundle-SymbolicName: com.weiglewilczek.coop.client;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: com.weiglewilczek.coop.client.Activator
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.scala-ide.scala.library,
+ org.eclipse.core.databinding;bundle-version="1.2.0",
+ org.eclipse.core.databinding.property;bundle-version="1.2.0",
+ org.eclipse.jface.databinding;bundle-version="1.3.1",
+ org.eclipse.core.databinding.beans;bundle-version="1.2.0"
+Bundle-ActivationPolicy: lazy
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
