@@ -8,5 +8,5 @@ trait IFlexListContentProvider {
 	
 	def getImage(obj: AnyRef, index:Int):Image
 	
-	def getSource(obj: AnyRef, index:Int):List[AnyRef]
+	def getSource(obj: AnyRef, index:Int):AnyRef
 }

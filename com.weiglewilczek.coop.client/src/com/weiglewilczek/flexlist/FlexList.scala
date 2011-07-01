@@ -7,6 +7,7 @@ import org.eclipse.swt.widgets.Link
 import org.eclipse.swt.widgets.Canvas
 import org.eclipse.swt.widgets.Listener
 import org.eclipse.swt.widgets.Event
+import org.eclipse.swt.widgets.Display
 import org.eclipse.swt.graphics.Point
 import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.graphics.Color
@@ -19,10 +20,16 @@ import org.eclipse.swt.SWT
 import java.lang.Class
 import java.lang.Math
 import scala.Array
+import scala.Tuple2
 import org.eclipse.core.databinding.observable.list.WritableList
 import org.eclipse.core.databinding.observable.list.IListChangeListener
 import org.eclipse.core.databinding.observable.list.ListChangeEvent
 import org.eclipse.core.databinding.observable.list.ListDiffVisitor
+import java.util.Iterator
+import org.eclipse.ui.PlatformUI
+import org.eclipse.swt.events.SelectionAdapter
+import org.eclipse.swt.events.SelectionEvent
+import java.net.URL
 
 object FlexList {
 
@@ -36,8 +43,8 @@ object FlexList {
 
 class FlexList[T <: IFlexListElement](parent: Composite, style: Int) extends ScrolledComposite(parent, style) with IListChangeListener {
 
-  var input: List[Object] = Nil
-  val elements: ListBuffer[Composite] = new ListBuffer[Composite]
+  var input: AnyRef = Nil
+  val elements = new ListBuffer[Composite]
   var listContent: Composite = null
   var contentProvider: IFlexListContentProvider = null
   var elementCreator: ((Composite, Int, Object) => T) = null
@@ -50,7 +57,7 @@ class FlexList[T <: IFlexListElement](parent: Composite, style: Int) extends Scr
     }
   }
 
-  def setInput(input: List[Object]) {
+  def setInput(input: AnyRef) {
     this.input = input
 
     this.input match {
@@ -62,7 +69,7 @@ class FlexList[T <: IFlexListElement](parent: Composite, style: Int) extends Scr
     buildList
   }
 
-  def getInput(): List[Object] = {
+  def getInput(): AnyRef = {
     return input
   }
 
@@ -87,8 +94,8 @@ class FlexList[T <: IFlexListElement](parent: Composite, style: Int) extends Scr
 
   override def layout(updateLabel: Boolean, all: Boolean) {
     if (!computeSize.equals(getContent().getSize())) {
-      super.layout(updateLabel, all)
       getContent().setSize(computeSize)
+      super.layout(updateLabel, all)
     }
   }
 
@@ -103,14 +110,13 @@ class FlexList[T <: IFlexListElement](parent: Composite, style: Int) extends Scr
   def clear {
     elements.forall(element =>
       {
-        element match
-          {
-            case elem: Composite =>
-              elem.dispose()
-              return elem.isDisposed()
-            case _ =>
-              return true;
-          }
+        element match {
+          case elem: Composite =>
+            elem.dispose()
+            return elem.isDisposed()
+          case _ =>
+            return true;
+        }
       })
   }
 
@@ -118,14 +124,25 @@ class FlexList[T <: IFlexListElement](parent: Composite, style: Int) extends Scr
     elementCreator match {
       case creator: ((Composite, Int, Object) => T) =>
         {
-        input.forall(inputElement =>
-          {
-            addElement(inputElement)
-            true
-          })
+          input match {
+            case inputList: List[Object] =>
 
-        update
-      }
+              inputList.forall(inputElement =>
+                {
+                  addElement(inputElement)
+                  true
+                })
+
+              update
+            case inputList: WritableList =>
+              val iterator = inputList.listIterator
+              while (iterator.hasNext()) {
+                addElement(iterator.next().asInstanceOf[AnyRef])
+              }
+
+              update
+          }
+        }
 
       case _ =>
     }
@@ -134,31 +151,60 @@ class FlexList[T <: IFlexListElement](parent: Composite, style: Int) extends Scr
   }
 
   override def update {
-    super.update
-    contentProvider match {
-      case contentProvider: IFlexListContentProvider =>
-        elements.forall(element =>
-          {
-            val subElements = element.asInstanceOf[IFlexListElement].getListChildren()
-            var index = 0
-            subElements.forall(subElement =>
-              {
-                val text = contentProvider.getValue(element.getData("DATA"), index)
-                val image = contentProvider.getImage(element.getData("DATA"), index)
-                subElement match {
-                  case subElem: Label => subElem.setText(text.toString)
-                  case subElem: Link => subElem.setText(text.toString)
-                  case subElem: Canvas => subElem.setBackgroundImage(image)
-                  case _ =>
-                }
-                index = index + 1
+    try {
+      super.update
+      contentProvider match {
+        case contentProvider: IFlexListContentProvider =>
+          elements.forall(element =>
+            {
+              val subElements = element.asInstanceOf[IFlexListElement].getListChildren()
+              var index = 0
+              subElements.forall(subElement =>
+                {
+                  val text = contentProvider.getValue(element.getData("FLEXLIST_DATA"), index)
+                  val image = contentProvider.getImage(element.getData("FLEXLIST_DATA"), index)
+                  val source = contentProvider.getSource(element.getData("FLEXLIST_DATA"), index)
+                  subElement match {
+                    case subElem: Label =>
+                      if (text != null) {
+                        subElem.setText(text.toString)
+                      }
+                    case subElem: Link =>
+                      if (text != null) {
+                        subElem.setText(text.toString)
+                      }
 
-                true
-              })
+                      if (text != null && text.asInstanceOf[String].indexOf("<a>") > -1) {
+                        subElem.addSelectionListener(new SelectionAdapter() {
+                          override def widgetSelected(e: SelectionEvent) {
+                            val browserSupport =
+                              PlatformUI.getWorkbench().getBrowserSupport()
+                            try {
+                              val browser = browserSupport.createBrowser(null)
+                              browser.openURL(new URL(e.text))
+                            } catch {
+                              case exception: Throwable => println(exception)
+                            }
+                          }
+                        })
 
-            true
-          })
-      case _ =>
+                      }
+                    case subElem: Canvas => subElem.setBackgroundImage(image)
+                    case _ =>
+                  }
+                  index = index + 1
+
+                  true
+                })
+
+              true
+            })
+        case _ =>
+      }
+    } catch {
+      case ex: Throwable =>
+        println(ex)
+        ex.printStackTrace()
     }
   }
 
@@ -166,30 +212,33 @@ class FlexList[T <: IFlexListElement](parent: Composite, style: Int) extends Scr
    * At Element at the End
    * @param inputElement
    */
-  protected def addElement(inputElement: Object) {
+  protected def addElement(inputElement: AnyRef) {
     addElement(elements.length, inputElement)
   }
 
-  protected def addElement(index: Int, inputElement: Object) {
+  protected def addElement(index: Int, inputElement: AnyRef) {
 
     val element = elementCreator(listContent, SWT.NONE, inputElement)
     element match {
       case elem: Composite =>
-        elem.setData("DATA", inputElement)
+        elem.setData("FLEXLIST_DATA", inputElement)
         addElement(index, inputElement, elem)
         true
       case _ => false
     }
   }
 
-  protected def addElement(index: Int, inputElement: Object, element: Composite) {
+  protected def addElement(index: Int, inputElement: AnyRef, element: Composite) {
     var previousElement: Composite = null
     var nextElement: Composite = null
 
     if (elements.size > 0 && index >= elements.size) {
       previousElement = elements.last
-    } else if(elements.size > 0) {
-      previousElement = elements.apply(index - 1)
+    } else if (elements.size > 0) {
+      if (index > 0) {
+        previousElement = elements.apply(index - 1)
+      }
+
       nextElement = elements.apply(index)
     }
 
@@ -210,26 +259,40 @@ class FlexList[T <: IFlexListElement](parent: Composite, style: Int) extends Scr
     if (index < elements.length) {
       elements.insertAll(index, element :: Nil)
     } else {
-    	elements.append(element)
+      elements.append(element)
     }
+
+    update()
+    layout(true, true)
   }
 
   protected def removeElement(index: Int) {
     var previousElement: Composite = null
     var nextElement: Composite = null
-
+    var currentElement: Composite = elements.apply(index)
+    
     if (index >= elements.size) {
       previousElement = elements.last
+    } else if (index == 0) {
+      nextElement = elements.apply(1)
     } else {
-      previousElement = elements.apply(index - 1)
+      previousElement = elements.apply(index)
       nextElement = elements.apply(index + 1)
     }
 
-    if (nextElement != null && previousElement != null) {
+    if (previousElement != null) {
       nextElement.getLayoutData.asInstanceOf[FormData].top = new FormAttachment(previousElement, space, SWT.BOTTOM)
+    }
+    else if (nextElement != null) {
+      nextElement.getLayoutData.asInstanceOf[FormData].top = new FormAttachment(0, 0)
     }
 
     elements.drop(index)
+    currentElement.setVisible(false)
+    currentElement.dispose()
+
+    update()
+    layout(true, true)
   }
 
   protected def moveElement(oldIndex: Int, newIndex: Int, inputElement: Object) {
@@ -241,11 +304,20 @@ class FlexList[T <: IFlexListElement](parent: Composite, style: Int) extends Scr
   def handleListChange(event: ListChangeEvent) {
     event.diff.accept(new ListDiffVisitor() {
       override def handleAdd(index: Int, child: AnyRef) {
-        addElement(index, child);
+        Display.getCurrent().syncExec(new Runnable() {
+          override def run() {
+            addElement(index, child)
+          }
+        })
+
       }
 
       override def handleRemove(index: Int, child: AnyRef) {
-        removeElement(index);
+        Display.getCurrent().syncExec(new Runnable() {
+          override def run() {
+            removeElement(index)
+          }
+        })
       }
 
       override def handleReplace(index: Int, oldChild: AnyRef,
@@ -254,8 +326,12 @@ class FlexList[T <: IFlexListElement](parent: Composite, style: Int) extends Scr
 
       override def handleMove(oldIndex: Int, newIndex: Int,
         child: AnyRef) {
-        moveElement(oldIndex,
-          newIndex, child);
+        Display.getCurrent().syncExec(new Runnable() {
+          override def run() {
+            moveElement(oldIndex,
+              newIndex, child)
+          }
+        })
       }
     });
   }

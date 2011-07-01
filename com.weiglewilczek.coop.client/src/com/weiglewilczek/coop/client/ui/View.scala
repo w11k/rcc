@@ -7,6 +7,8 @@ import org.eclipse.swt.widgets.Text
 import org.eclipse.swt.widgets.Label
 import org.eclipse.swt.widgets.TabFolder
 import org.eclipse.swt.widgets.TabItem
+import org.eclipse.swt.events.SelectionAdapter
+import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.layout.FillLayout
 import org.eclipse.swt.layout.GridData
@@ -49,41 +51,41 @@ class View extends ViewPart {
     val tabbedPane = new TabFolder(area, SWT.NONE)
 
     // all
-    val allTab = new TabItem(tabbedPane, SWT.NONE)
-    allTab setText "All"
-    val allTabContent = new Composite(tabbedPane, SWT.NONE)
-    allTabContent setLayout new GridLayout
-
-    allText = new Text(allTabContent, SWT.BORDER | SWT.MULTI)
+    //    val allTab = new TabItem(tabbedPane, SWT.NONE)
+    //    allTab setText Messages.all
+    //    val allTabContent = new Composite(tabbedPane, SWT.NONE)
+    //    allTabContent setLayout new GridLayout
+    //
+    //    allText = new Text(allTabContent, SWT.BORDER | SWT.MULTI)
     var textLayout = new GridData(SWT.FILL, SWT.FILL, true, false)
-    textLayout.heightHint = 30
-    allText setLayoutData textLayout
-
-    allButton = new Button(allTabContent, SWT.PUSH)
-    allButton setText "Update"
+    //    textLayout.heightHint = 30
+    //    allText setLayoutData textLayout
+    //
+    //    allButton = new Button(allTabContent, SWT.PUSH)
+    //    allButton setText Messages.update
     var buttonLayout = new GridData(SWT.RIGHT, SWT.TOP, false, false)
-    allButton setLayoutData buttonLayout
-
-    allList = FlexList[Element](allTabContent, SWT.NONE)
+    //    allButton setLayoutData buttonLayout
+    //
+    //    allList = FlexList[Element](allTabContent, SWT.NONE)
     var listLayout = new GridData(SWT.FILL, SWT.FILL, true, true)
-    allList setLayoutData listLayout
-
-    allList.setElementCreator(((parent: Composite, style: Int, inputElement: Object) =>
-      {
-        inputElement match {
-          case time: HarvestTime => new HarvestTimeElement(parent)
-          case coop: Coop => new CoopElement(parent)
-          case _ => null
-        }
-      }))
-    allList.setContentProvider(new CoopContentProvider())
-    allList.setInput(DaoManager.getAll)
-
-    allTab setControl allTabContent
+    //    allList setLayoutData listLayout
+    //
+    //    allList.setElementCreator(((parent: Composite, style: Int, inputElement: Object) =>
+    //      {
+    //        inputElement match {
+    //          case time: HarvestTime => new HarvestTimeElement(parent)
+    //          case coop: Coop => new CoopElement(parent)
+    //          case _ => null
+    //        }
+    //      }))
+    //    allList.setContentProvider(new CoopContentProvider())
+    //    allList.setInput(DaoManager.getAll)
+    //
+    //    allTab setControl allTabContent
 
     // coop
     val coopTab = new TabItem(tabbedPane, SWT.NONE)
-    coopTab setText "Coop"
+    coopTab setText Messages.applicationName
     val coopTabContent = new Composite(tabbedPane, SWT.NONE)
     coopTabContent setLayout new GridLayout
 
@@ -93,9 +95,18 @@ class View extends ViewPart {
     coopText setLayoutData textLayout
 
     coopButton = new Button(coopTabContent, SWT.PUSH)
-    coopButton setText "Update"
+    coopButton setText Messages.update
     buttonLayout = new GridData(SWT.RIGHT, SWT.TOP, false, false)
     coopButton setLayoutData buttonLayout
+
+    coopButton addSelectionListener (new SelectionAdapter() {
+      override def widgetSelected(e: SelectionEvent) {
+        if (coopText.getText().length > 0) {
+          DaoManager.addCoop(coopText.getText())
+          coopText.setText("")
+        }
+      }
+    })
 
     coopList = FlexList[CoopElement](coopTabContent, SWT.NONE)
     var coopListLayout = new GridData(SWT.FILL, SWT.FILL, true, true)
@@ -108,56 +119,56 @@ class View extends ViewPart {
     coopTab setControl coopTabContent
 
     // time
-    val timeTab = new TabItem(tabbedPane, SWT.NONE)
-    timeTab setText "Time Tracking"
-    val timeTabContent = new Composite(tabbedPane, SWT.NONE)
-    timeTabContent setLayout new GridLayout(3, false)
-
-    timeText = new Text(timeTabContent, SWT.BORDER | SWT.MULTI)
-    textLayout = new GridData(SWT.FILL, SWT.FILL, true, false)
-    textLayout.heightHint = 30
-    textLayout.horizontalSpan = 3
-    timeText setLayoutData textLayout
-
-    timeProject = new ComboViewer(timeTabContent, SWT.BORDER | SWT.READ_ONLY | SWT.DROP_DOWN)
-    val projectLayout = new GridData(SWT.RIGHT, SWT.TOP, false, false)
-    projectLayout.widthHint = 140
-    timeProject.getCombo setLayoutData projectLayout
-
-    val projects = new Array[String](1)
-    projects.update(0, "Choose a Project")
-    timeProject.getCombo setItems (projects)
-    timeProject.getCombo().select(0)
-
-    timeTask = new ComboViewer(timeTabContent, SWT.BORDER | SWT.READ_ONLY | SWT.DROP_DOWN)
-    val taskLayout = new GridData(SWT.RIGHT, SWT.TOP, false, false)
-    taskLayout.widthHint = 140
-    timeTask.getCombo setLayoutData taskLayout
-
-    val tasks = new Array[String](1)
-    tasks.update(0, "Choose a Task")
-    timeTask.getCombo setItems (tasks)
-    timeTask.getCombo().select(0)
-
-    timeButton = new Button(timeTabContent, SWT.PUSH)
-    timeButton setText "Save"
-    buttonLayout = new GridData(SWT.RIGHT, SWT.TOP, false, false)
-    timeButton setLayoutData buttonLayout
-
-    timeList = FlexList[HarvestTimeElement](timeTabContent, SWT.NONE)
-    var timeListLayout = new GridData(SWT.FILL, SWT.FILL, true, true)
-    timeListLayout.horizontalSpan = 3
-    timeList setLayoutData timeListLayout
-
-    timeList.setElementCreator(((parent: Composite, style: Int, inputElement: Object) => new HarvestTimeElement(parent)))
-    timeList.setContentProvider(new CoopContentProvider())
-    timeList.setInput(DaoManager.getTimes)
-
-    timeTab setControl timeTabContent
+    //    val timeTab = new TabItem(tabbedPane, SWT.NONE)
+    //    timeTab setText Messages.timeTracking
+    //    val timeTabContent = new Composite(tabbedPane, SWT.NONE)
+    //    timeTabContent setLayout new GridLayout(3, false)
+    //
+    //    timeText = new Text(timeTabContent, SWT.BORDER | SWT.MULTI)
+    //    textLayout = new GridData(SWT.FILL, SWT.FILL, true, false)
+    //    textLayout.heightHint = 30
+    //    textLayout.horizontalSpan = 3
+    //    timeText setLayoutData textLayout
+    //
+    //    timeProject = new ComboViewer(timeTabContent, SWT.BORDER | SWT.READ_ONLY | SWT.DROP_DOWN)
+    //    val projectLayout = new GridData(SWT.RIGHT, SWT.TOP, false, false)
+    //    projectLayout.widthHint = 140
+    //    timeProject.getCombo setLayoutData projectLayout
+    //
+    //    val projects = new Array[String](1)
+    //    projects.update(0, "Choose a Project")
+    //    timeProject.getCombo setItems (projects)
+    //    timeProject.getCombo().select(0)
+    //
+    //    timeTask = new ComboViewer(timeTabContent, SWT.BORDER | SWT.READ_ONLY | SWT.DROP_DOWN)
+    //    val taskLayout = new GridData(SWT.RIGHT, SWT.TOP, false, false)
+    //    taskLayout.widthHint = 140
+    //    timeTask.getCombo setLayoutData taskLayout
+    //
+    //    val tasks = new Array[String](1)
+    //    tasks.update(0, "Choose a Task")
+    //    timeTask.getCombo setItems (tasks)
+    //    timeTask.getCombo().select(0)
+    //
+    //    timeButton = new Button(timeTabContent, SWT.PUSH)
+    //    timeButton setText Messages.save
+    //    buttonLayout = new GridData(SWT.RIGHT, SWT.TOP, false, false)
+    //    timeButton setLayoutData buttonLayout
+    //
+    //    timeList = FlexList[HarvestTimeElement](timeTabContent, SWT.NONE)
+    //    var timeListLayout = new GridData(SWT.FILL, SWT.FILL, true, true)
+    //    timeListLayout.horizontalSpan = 3
+    //    timeList setLayoutData timeListLayout
+    //
+    //    timeList.setElementCreator(((parent: Composite, style: Int, inputElement: Object) => new HarvestTimeElement(parent)))
+    //    timeList.setContentProvider(new CoopContentProvider())
+    //    timeList.setInput(DaoManager.getTimes)
+    //
+    //    timeTab setControl timeTabContent
   }
 
   def setFocus(): Unit = {
-    allText.setFocus()
-    allList.layout()
+    coopText.setFocus()
+    coopList.layout()
   }
 }

@@ -7,6 +7,8 @@ import org.eclipse.swt.widgets.Display
 import com.weiglewilczek.coop.client.ui.login.LoginDialog
 import com.weiglewilczek.coop.client.ui.login.CoopClient
 import com.weiglewilczek.coop.client.ui.login.LogonManager
+import com.weiglewilczek.coop.client.DaoManager
+import org.eclipse.ui.PlatformUI
 
 class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
 
@@ -18,7 +20,7 @@ class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
     return ApplicationWorkbenchAdvisor.PERSPECTIVE_ID
   }
 
-  override def preStartup {
+  override def preStartup() {
     if (CoopClient.getInstance.remember && CoopClient.getInstance.user != null && CoopClient.getInstance.user.length > 0 && CoopClient.getInstance.password != null && CoopClient.getInstance.password.length > 0) {
       LogonManager.login
     }
@@ -31,7 +33,7 @@ class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
       dialog.open
       val result = dialog.result
       if (result == LoginDialog.RESULT_LOGIN) {
-    	  CoopClient.storeUserNamePassword
+        CoopClient.storeUserNamePassword
         LogonManager.login
       } else {
         System.exit(0)
@@ -42,6 +44,12 @@ class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
       System.exit(0)
     }
 
+  }
+  
+  override def preShutdown():Boolean = {
+    DaoManager.dispose
+    
+    super.preShutdown
   }
 
 }

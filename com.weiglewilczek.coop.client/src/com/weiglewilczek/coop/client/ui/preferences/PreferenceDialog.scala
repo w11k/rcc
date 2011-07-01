@@ -1,5 +1,6 @@
 package com.weiglewilczek.coop.client.ui.preferences
 
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog
 import org.eclipse.swt.widgets.Shell
 import org.eclipse.swt.widgets.Control
@@ -53,7 +54,7 @@ class PreferenceDialog(shell: Shell) extends TitleAreaDialog(shell) {
     updateInterval.setLayoutData(intervalGd)
 
     dbc.bindValue(SWTObservables.observeText(updateInterval, SWT.Modify), PojoObservables.observeDetailValue(coopClientValue, "updateIntervall",
-      Long.getClass))
+      "".getClass))
 
     val resultListEntriesLabel = new Label(workingArea, SWT.NONE)
     resultListEntriesLabel.setText(Messages.shownAmountOfCoopEntries + ":")
@@ -66,7 +67,7 @@ class PreferenceDialog(shell: Shell) extends TitleAreaDialog(shell) {
 
     class ResultListEntriesSelectionListener extends SelectionAdapter {
       override def widgetSelected(e: SelectionEvent) {
-        e.item.getData match {
+        e.widget.getData match {
           case selectedResultListEntryType: ResultListType.Value => CoopClient.getInstance.resultListEntries = selectedResultListEntryType
           case _ => CoopClient.getInstance.resultListEntries = ResultListType.Default
         }
@@ -76,18 +77,23 @@ class PreferenceDialog(shell: Shell) extends TitleAreaDialog(shell) {
     val resultListEntries30 = new Button(resultListEntries, SWT.RADIO)
     resultListEntries30.setText(Messages.thirtyEntries)
     resultListEntries30.setData(ResultListType.Thirty)
+    resultListEntries30.addSelectionListener(new ResultListEntriesSelectionListener())
     val resultListEntriesDefault = new Button(resultListEntries, SWT.RADIO)
     resultListEntriesDefault.setText(Messages.defaultEntries)
     resultListEntriesDefault.setData(ResultListType.Default)
+    resultListEntriesDefault.addSelectionListener(new ResultListEntriesSelectionListener())
     val resultListEntriesToday = new Button(resultListEntries, SWT.RADIO)
     resultListEntriesToday.setText(Messages.today)
     resultListEntriesToday.setData(ResultListType.Today)
+    resultListEntriesToday.addSelectionListener(new ResultListEntriesSelectionListener())
     val resultListEntries2Days = new Button(resultListEntries, SWT.RADIO)
     resultListEntries2Days.setText(Messages.twoDays)
     resultListEntries2Days.setData(ResultListType.TwoDays)
+    resultListEntries2Days.addSelectionListener(new ResultListEntriesSelectionListener())
     val resultListEntries3Days = new Button(resultListEntries, SWT.RADIO)
     resultListEntries3Days.setText(Messages.threeDays)
     resultListEntries3Days.setData(ResultListType.ThreeDays)
+    resultListEntries3Days.addSelectionListener(new ResultListEntriesSelectionListener())
     val gridData = new GridData()
     gridData.horizontalSpan = 2
     resultListEntriesDefault.setLayoutData(gridData)
@@ -106,7 +112,23 @@ class PreferenceDialog(shell: Shell) extends TitleAreaDialog(shell) {
     return dialogArea
   }
   
-  // TODO save on ok!
+  override protected def createButtonsForButtonBar(parent:Composite) {
+	  super.createButtonsForButtonBar(parent)
+	  getButton(IDialogConstants.OK_ID).addSelectionListener(new SelectionAdapter()
+	  {
+		  override def widgetSelected(e:SelectionEvent) {
+			  CoopClient.storePreferences
+		  }
+	  })
+	  getButton(IDialogConstants.CANCEL_ID).addSelectionListener(new SelectionAdapter()
+	  {
+		  override def widgetSelected(e:SelectionEvent) {
+			  CoopClient.restorePreferences
+		  }
+	  })
+	}
+  
+  
 
   override protected def getInitialSize(): Point = {
     val shellSize = super.getInitialSize();

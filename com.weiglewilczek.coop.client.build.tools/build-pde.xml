@@ -5,6 +5,8 @@
           http://www.eclipse.org/legal/epl-v10.html     
     -->
 <project name="RCC-Client-Build" default="pde-build" basedir=".">
+	<property file="/properties/build.properties" />
+	<property file="properties/users/${user.name}.properties" />
 	<property file="build.properties" />
 
 	<target name="clean">

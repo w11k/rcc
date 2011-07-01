@@ -32,14 +32,12 @@ class Activator extends AbstractUIPlugin {
 	override def start(context:BundleContext)
 	{
 		super.start(context)
-		println("start");
 		Activator.setPlugin(this)
 	}
 	
 	override def stop(context:BundleContext)
 	{
 		Activator.unsetPlugin()
-		println("stop");
 		super.stop(context)
 	}
 }

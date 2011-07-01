@@ -24,16 +24,17 @@ abstract class Element(parent: Composite, style:Int) extends Composite(parent: C
 		setLayout(new FormLayout())
 		setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE))
 		
-		image = new Canvas(this, SWT.BORDER)
+		image = new Canvas(this, SWT.NONE)
 		val imageLayoutData = new FormData()
 		imageLayoutData.top = new FormAttachment(0, 5)
 		imageLayoutData.left = new FormAttachment(0, 5)
-		imageLayoutData.height = 20
-		imageLayoutData.width = 20
+		imageLayoutData.height = 48
+		imageLayoutData.width = 48
 		image.setLayoutData(imageLayoutData)
 		addChild(image)
 		
 		user = new Link(this, SWT.NONE)
+		user.setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE))
 		val userLayoutData = new FormData()
 		userLayoutData.top = new FormAttachment(0, 5)
 		userLayoutData.left = new FormAttachment(image, 5, SWT.RIGHT)

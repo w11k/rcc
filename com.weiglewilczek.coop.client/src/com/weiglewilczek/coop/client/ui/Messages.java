@@ -20,6 +20,15 @@ public class Messages extends NLS {
 	public static String today;
 	public static String twoDays;
 	public static String threeDays;
+	public static String rightNow;
+	public static String secondsAgo;
+	public static String aboutOneMinuteAgo;
+	public static String aboutNMinutesAgo;
+	public static String aboutOneHourAgo;
+	public static String aboutNHoursAgo;
+	public static String yesterday;
+	public static String aboutNDaysAgo;
+	public static String overAYearAgo;
 
 	static {
 		// initialize resource bundle

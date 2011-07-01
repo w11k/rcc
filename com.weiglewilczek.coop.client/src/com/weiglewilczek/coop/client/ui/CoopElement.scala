@@ -15,12 +15,13 @@ import org.eclipse.swt.SWT
 class CoopElement(parent: Composite, style: Int = SWT.NONE) extends Element(parent: Composite, style: Int) {
   createContent()
 
-  protected var text: Label = null
+  protected var text: Link = null
 
   override def createContent() {
     super.createContent
 
-    text = new Label(this, SWT.WRAP)
+    text = new Link(this, SWT.WRAP)
+    text.setBackground(getDisplay().getSystemColor(SWT.COLOR_WHITE))
     val textLayoutData = new FormData()
     textLayoutData.top = new FormAttachment(user, 5, SWT.BOTTOM)
     textLayoutData.left = new FormAttachment(image, 5, SWT.RIGHT)

@@ -1,39 +1,47 @@
 package com.weiglewilczek.coop.client.ui.login
 
-import java.net.URL
-import java.net.URLConnection
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import org.eclipse.core.internal.preferences.Base64
 import java.lang.StringBuffer
+import com.weiglewilczek.coop.model.Group
+import com.weiglewilczek.coop.client.DaoManager
+import com.weiglewilczek.coop.client.RestReader
 
 object LogonManager {
   def login {
-//    val user = new URL("http://coopapp.com/groups/9395/users/17790") // ich
-//    val day = new URL("http://coopapp.com/groups/9395/2011-02-28") // tag
-//    val yc = day.openConnection()
-//
-//    // TODO: direkt so in CoopClient ablegen und auch so in den prefs speichern
-//    val authentication = new String(Base64.encode((CoopClient.getInstance.user + ":" + CoopClient.getInstance.password).getBytes())).replaceAll("\n\r", "")
-//    yc.setRequestProperty("Authorization", authentication)
-//    yc.setRequestProperty("Content-Type", "application/xml")
-//    yc.setRequestProperty("Content-Accept", "application/xml")
-//
-//    val in = new BufferedReader(
-//      new InputStreamReader(
-//        yc.getInputStream()))
-//    var inputLine:String = null
-//    
-//    var input:StringBuffer = new StringBuffer
-//
-//    while ((inputLine = in.readLine) != null)
-//    {
-//    	input.append(new String(inputLine) + "\n\r")
-//    }
-//
-//    in.close()
-
-    CoopClient.getInstance.loggedIn = true
+    if (CoopClient.getInstance.user != null && CoopClient.getInstance.password != null) {
+      readGroup()
+      if (CoopClient.getInstance.currentGroup != null) {
+        DaoManager.initialize
+        
+        CoopClient.getInstance.loggedIn = true
+      }
+    }
   }
 
+  private def readGroup() {
+    try {
+    	val groupsXML =
+    	{
+	    	if(!CoopClient.getInstance.offline) {
+		    	new RestReader("http://coopapp.com/groups").read().get
+		    } else {
+		    	<groups type="array">
+				  <group>
+				    <name>WeigleWilczek</name>
+				    <created-at type="datetime">2011-01-20T14:10:13-05:00</created-at>
+				    <updated-at type="datetime">2011-01-20T14:10:13-05:00</updated-at>
+				    <id type="integer">9395</id>
+				    <timezone>Berlin</timezone>
+				  </group>
+				</groups>
+	    	}
+    	}
+
+      val groupId = groupsXML \ "group" \ "id" text
+      val groupName = groupsXML \ "group" \ "name" text
+      val currentGroup = new Group(groupId, groupName)
+      CoopClient.getInstance.currentGroup = currentGroup
+    } catch {
+      case ex: Throwable => println(ex);
+    }
+  }
 }
