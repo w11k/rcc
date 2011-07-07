@@ -8,6 +8,7 @@ import org.eclipse.core.runtime.preferences.IEclipsePreferences
 import org.eclipse.ui.preferences.ScopedPreferenceStore
 import scala.Long
 import org.eclipse.equinox.security.storage.SecurePreferencesFactory
+import org.eclipse.equinox.security.storage.provider.IProviderHints
 import org.eclipse.equinox.internal.security.storage.SecurePreferencesWrapper
 
 object CoopClient {
@@ -22,7 +23,12 @@ object CoopClient {
   // .metadata/.plugins/org.eclipse.core.runtime/.settings/com.weiglewilczek.coop.client.prefs
   private val preferenceStore = Activator.getDefault()
     .getPreferenceStore()
-  private val securedPreferenceStore = SecurePreferencesFactory.getDefault()
+  private val securedPreferenceStore =
+    {
+      val securedPreferenceStore = SecurePreferencesFactory.getDefault().node("rcc.preferences").asInstanceOf[SecurePreferencesWrapper]
+      securedPreferenceStore.getContainer().setOption(IProviderHints.PROMPT_USER, true)
+      securedPreferenceStore
+    }
 
   private def commitPreferenceStore() {
     val nodes = preferenceStore.asInstanceOf[ScopedPreferenceStore]
@@ -35,10 +41,6 @@ object CoopClient {
       }
       true
     })
-  }
-
-  private def commitSecuredPreferenceStore() {
-    securedPreferenceStore.asInstanceOf[SecurePreferencesWrapper].flush()
   }
 
   val getInstance: CoopClient = {
@@ -80,14 +82,18 @@ object CoopClient {
     instance
   }
 
-  def storeUserNamePassword {
+  def storeUserName {
     if (getInstance.remember) {
       preferenceStore.setValue(PREFERENCE_USERNAME, getInstance.user)
       preferenceStore.setValue(PREFERENCE_REMEMBER, getInstance.remember)
       commitPreferenceStore
+    }
+  }
 
+  def storePassword {
+    if (getInstance.remember) {
       securedPreferenceStore.put(PREFERENCE_PASSWORD, getInstance.password, true)
-      commitSecuredPreferenceStore
+      securedPreferenceStore.flush()
     }
   }
 

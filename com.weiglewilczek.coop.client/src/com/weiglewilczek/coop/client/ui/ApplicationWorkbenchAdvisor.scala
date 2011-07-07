@@ -33,7 +33,8 @@ class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
       dialog.open
       val result = dialog.result
       if (result == LoginDialog.RESULT_LOGIN) {
-        CoopClient.storeUserNamePassword
+        CoopClient.storeUserName
+        CoopClient.storePassword
         LogonManager.login
       } else {
         System.exit(0)
@@ -45,10 +46,11 @@ class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
     }
 
   }
-  
-  override def preShutdown():Boolean = {
+
+
+  override def preShutdown(): Boolean = {
     DaoManager.dispose
-    
+
     super.preShutdown
   }
 
