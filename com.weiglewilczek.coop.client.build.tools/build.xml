@@ -39,7 +39,7 @@
 			<entry key="client.build.number" value="${build.number}" />
 		</propertyfile>
 
-		<copy todir="${workspace}/com.weiglewilczek.coop.clientr/src" overwrite="true">
+		<copy todir="${workspace}/com.weiglewilczek.coop.client/src" overwrite="true">
 			<fileset dir="${version.config.dir}">
 				<include name="${coop.client.build.version.file}" />
 			</fileset>

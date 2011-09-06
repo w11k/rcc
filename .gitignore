@@ -1,0 +1,6 @@
+.DS_Store
+.metadata
+com.weiglewilczek.coop.client.releng.buildoutput
+com.weiglewilczek.coop.client.build.tools/build
+com.weiglewilczek.coop.client/bin
+com.weiglewilczek.coop.client/src/coop.client.version.properties

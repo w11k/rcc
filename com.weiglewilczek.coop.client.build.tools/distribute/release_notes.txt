@@ -1,14 +1,22 @@
 Update:
 Die in Coop eingegebenen Preferences werde gespeichert in:
 CoopClient.app/Contents/MacOS/workspace/.metadata/plugins/org.eclipse.core.runtime/.settings/com.weiglewilczek.coop.client.prefs
-Bei einem Update auf eine andere Programmversion, bitte diese Datei (bzw. dern Ordner org.eclipse.core.runtime) manuell in das neue Programm kopieren oder den Usernamen erneut eingeben.
+Bei einem Update auf eine andere Programmversion, bitte diese Datei (bzw. den Ordner org.eclipse.core.runtime) manuell in das neue Programm kopieren oder den Usernamen erneut eingeben.
 
-Known Bug:
+Known Bugs:
+#1:
 Vor dem Start muss dem Owner noch Execution-Rechte für die Datei CoopClient.app/Contents/MacOS/CoopClient hinzugefügt werden.
-Also:
-chmod +xw ....CoopClient.app/Contents/MacOS/CoopClient
+Also: chmod +xw ....CoopClient.app/Contents/MacOS/CoopClient
+
+#2:
+Manchmal werden Texte aus dem Update-Feld nur teilweise an den Server übertragen, manchmal auch nur leere Strings
 
 Release Notes:
+
+RC1:
+- Behoben: Links werden pro Click updateTimes*1-Mal geöffnet
+- Behoben: Update funktioniert nicht mehr nachdem ein Eintrag im Webclient gelöscht wurde
+- Umgesetzt: Jede Minute werden die Labels (und das Layout) aktualisiert (Zeitanzeige z.B. "jetzt" , "vor 1 Minute" ... wird aktualisiert)
 
 Alpha1:
 Funktionsumfang:

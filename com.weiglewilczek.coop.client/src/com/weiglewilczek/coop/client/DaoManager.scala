@@ -44,6 +44,8 @@ object DaoManager {
   private var lastUpdate: Date = new Date
   private val updateJob = new UpdateJob
 
+  private var updateRunning = false
+
   class UpdateJob extends Job("Update Coop entries") {
     protected def run(monitor: IProgressMonitor): IStatus = {
       try {
@@ -265,6 +267,8 @@ object DaoManager {
   }
 
   private def updateCoops() {
+    updateRunning = true
+
     try {
       val now = new Date()
       val format = new SimpleDateFormat()
@@ -280,58 +284,62 @@ object DaoManager {
         }
       }
 
-      val added = new ListBuffer[Coop]
-      val removed = new ListBuffer[Coop]
-      val todayCoops = new ListBuffer[String]
+      if (!CoopClient.getInstance.offline) {
+        val added = new ListBuffer[Coop]
+        val removed = new ListBuffer[Coop]
+        val todayCoops = new ListBuffer[String]
 
-      for (coopElem <- (coopXML \ "status")) {
-        val id = coopElem \ "id" text
-        val user = coopElem \ "user" \ "id" text
-        val timeString = coopElem \ "updated-at" text
-        val text = coopElem \ "text" text
+        for (coopElem <- (coopXML \ "status")) {
+          val id = coopElem \ "id" text
+          val user = coopElem \ "user" \ "id" text
+          val timeString = coopElem \ "updated-at" text
+          val text = coopElem \ "text" text
 
-        val time = restStringToDate(timeString)
+          val time = restStringToDate(timeString)
 
-        val coop = new Coop(id, getUser(user).get, time, text)
-        if (!coopIds.contains(coop.id)) {
-          added.append(coop)
-          coopIds.append(coop.id)
-        } else {
-          todayCoops.append(coop.id)
-        }
-      }
-
-      coops.getRealm().exec(new Runnable() {
-        override def run() {
-          val coopsIterator = coops.iterator
-          while (coopsIterator.hasNext) {
-            val coop = coopsIterator.next.asInstanceOf[Coop]
-            if (!coop.time.before(todayDate) && !todayCoops.contains(coop.id)) {
-              removed.append(coop)
-            }
+          val coop = new Coop(id, getUser(user).get, time, text)
+          if (!coopIds.contains(coop.id)) {
+            added.append(coop)
+            coopIds.append(coop.id)
+          } else {
+            todayCoops.append(coop.id)
           }
-
-          removed.toList.forall({ deletedElement =>
-            coops.remove(deletedElement)
-            true
-          })
-
-          added.toList.forall({ newElement =>
-            coops.add(0, newElement)
-            true
-          })
         }
-      })
 
-      TitleListener.fireUnreadEntriesAdded(added.size)
+        coops.getRealm().exec(new Runnable() {
+          override def run() {
+            val coopsIterator = coops.iterator
+            while (coopsIterator.hasNext) {
+              val coop = coopsIterator.next.asInstanceOf[Coop]
+              if (!coop.time.before(todayDate) && !todayCoops.contains(coop.id)) {
+                removed.append(coop)
+              }
+            }
 
-      if (added.size > 0) {
-        // TODO: play audio signal
+            removed.toList.forall({ deletedElement =>
+              coops.remove(deletedElement)
+              true
+            })
+
+            added.toList.forall({ newElement =>
+              coops.add(0, newElement)
+              true
+            })
+          }
+        })
+
+        TitleListener.fireUnreadEntriesAdded(added.size)
+
+        if (added.size > 0) {
+          // TODO: play audio signal
+        }
       }
 
       lastUpdate = now
     } catch {
       case ex: Throwable => println(ex)
+    } finally {
+    	updateRunning = false
     }
 
     Nil
@@ -358,7 +366,7 @@ object DaoManager {
         val timezoneOffset = timeString.substring(19, timeString.length);
 
         val calendar = new GregorianCalendar()
-//        calendar.setTimeZone(TimeZone.getTimeZone(timezoneOffset))
+        //        calendar.setTimeZone(TimeZone.getTimeZone(timezoneOffset))
 
         if (timeString.length < 25) {
           // 2011-06-07T08:06:13Z
@@ -384,6 +392,7 @@ object DaoManager {
 
   def addCoop(text: String) {
     val coop = new Coop(null, CoopClient.getInstance.currentUser, new Date(), text)
+    Activator.getDefault().getLog().log(new Status(IStatus.INFO, Activator.getDefault().getBundle().getSymbolicName(), 0, "update running: " + updateRunning + "; text: " + text, null))
 
     if (CoopClient.getInstance.offline) {
       coops.getRealm().exec(new Runnable() {

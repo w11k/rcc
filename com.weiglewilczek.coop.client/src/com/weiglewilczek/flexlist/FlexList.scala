@@ -113,9 +113,9 @@ class FlexList[T <: IFlexListElement](parent: Composite, style: Int) extends Scr
         element match {
           case elem: Composite =>
             elem.dispose()
-            return elem.isDisposed()
+            elem.isDisposed()
           case _ =>
-            return true;
+            true
         }
       })
   }
@@ -159,7 +159,7 @@ class FlexList[T <: IFlexListElement](parent: Composite, style: Int) extends Scr
             {
               val subElements = element.asInstanceOf[IFlexListElement].getListChildren()
               var index = 0
-              subElements.forall(subElement =>
+              subElements.forall(subElement => 
                 {
                   val text = contentProvider.getValue(element.getData("FLEXLIST_DATA"), index)
                   val image = contentProvider.getImage(element.getData("FLEXLIST_DATA"), index)
@@ -175,7 +175,13 @@ class FlexList[T <: IFlexListElement](parent: Composite, style: Int) extends Scr
                       }
 
                       if (text != null && text.asInstanceOf[String].indexOf("<a>") > -1) {
-                        subElem.addSelectionListener(new SelectionAdapter() {
+
+                        val oldSelectionListener = subElem.getData("FLEX_LIST_SELECTION_LISTENER")
+                        if (oldSelectionListener != null && oldSelectionListener.isInstanceOf[SelectionAdapter]) {
+                          subElem.removeSelectionListener(oldSelectionListener.asInstanceOf[SelectionAdapter])
+                        }
+
+                        val selectionListener = new SelectionAdapter() {
                           override def widgetSelected(e: SelectionEvent) {
                             val browserSupport =
                               PlatformUI.getWorkbench().getBrowserSupport()
@@ -186,7 +192,10 @@ class FlexList[T <: IFlexListElement](parent: Composite, style: Int) extends Scr
                               case exception: Throwable => println(exception)
                             }
                           }
-                        })
+                        }
+
+                        subElem.addSelectionListener(selectionListener)
+                        subElem.setData("FLEX_LIST_SELECTION_LISTENER", selectionListener)
 
                       }
                     case subElem: Canvas => subElem.setBackgroundImage(image)
@@ -197,6 +206,8 @@ class FlexList[T <: IFlexListElement](parent: Composite, style: Int) extends Scr
                   true
                 })
 
+                element.layout()
+                
               true
             })
         case _ =>
@@ -270,24 +281,23 @@ class FlexList[T <: IFlexListElement](parent: Composite, style: Int) extends Scr
     var previousElement: Composite = null
     var nextElement: Composite = null
     var currentElement: Composite = elements.apply(index)
-    
+
     if (index >= elements.size) {
       previousElement = elements.last
     } else if (index == 0) {
-      nextElement = elements.apply(1)
+      nextElement = elements.apply(index + 1)
     } else {
-      previousElement = elements.apply(index)
+      previousElement = elements.apply(index - 1)
       nextElement = elements.apply(index + 1)
     }
 
     if (previousElement != null) {
       nextElement.getLayoutData.asInstanceOf[FormData].top = new FormAttachment(previousElement, space, SWT.BOTTOM)
-    }
-    else if (nextElement != null) {
+    } else if (nextElement != null) {
       nextElement.getLayoutData.asInstanceOf[FormData].top = new FormAttachment(0, 0)
     }
 
-    elements.drop(index)
+    elements.remove(index)
     currentElement.setVisible(false)
     currentElement.dispose()
 

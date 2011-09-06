@@ -1,0 +1,20 @@
+test:
+TimeZone "Z"
+
+todo:
+- Manchmal werden Texte aus dem Update-Feld nur teilweise an den Server übertragen,
+manchmal auch nur leere Strings
+
+feature:
+create with formattings
+Entry delete
+Hintergrundfarbe, für Antworten (+ @All)
+cobot?
+gruppierung nach @<User>
+harvest time
+
+build: scala workaround:
+build.properties:
+ + bin (Verzeichnis, in dem die von Eclipse gebauten class-Files liegen)
+Manifest.mf - Bundle-ClassPath:
+ +  bin/

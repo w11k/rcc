@@ -7,6 +7,7 @@ import org.eclipse.swt.widgets.Text
 import org.eclipse.swt.widgets.Label
 import org.eclipse.swt.widgets.TabFolder
 import org.eclipse.swt.widgets.TabItem
+import org.eclipse.swt.widgets.Display
 import org.eclipse.swt.events.SelectionAdapter
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.layout.GridLayout
@@ -23,6 +24,9 @@ import com.weiglewilczek.flexlist.FlexList
 import com.weiglewilczek.coop.model.Coop
 import com.weiglewilczek.coop.model.HarvestTime
 import com.weiglewilczek.coop.client.DaoManager
+import com.weiglewilczek.coop.client.ui.login.CoopClient
+import java.util.Timer
+import java.util.TimerTask
 
 object View extends View {
   val VIEW_ID = "com.weiglewilczek.coop.client.ui.View"
@@ -165,6 +169,19 @@ class View extends ViewPart {
     //    timeList.setInput(DaoManager.getTimes)
     //
     //    timeTab setControl timeTabContent
+    
+    val updateTime = new Timer()
+    updateTime.schedule(new TimerTask(){
+    	override def run()
+    	{
+    		Display.getDefault.asyncExec(new Runnable(){
+    			def run()
+    			{
+    				coopList.update()
+    			}
+    		})
+    	}
+    }, 60000, 60000)
   }
 
   def setFocus(): Unit = {
